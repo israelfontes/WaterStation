@@ -48,18 +48,19 @@ Water Station é um sistema de gerenciamento completo para monitoramento de esta
 
 ## Cardinalidades
 
-- **User → Address (1:1)** → Cada usuário tem um endereço, e cada endereço pertence a um usuário.
-- **User → Authorization Level (N:1)** → Muitos usuários podem ter o mesmo nível de autorização.
-- **User → User Region (N:M)** → Um usuário pode estar associado a várias regiões, e uma região pode ter vários usuários.
-- **Reservoir → Sensor (1:N)** → Um reservatório pode ter vários sensores, mas um sensor pertence a apenas um reservatório.
-- **Sensor → Read (1:N)** → Um sensor gera múltiplas leituras, mas cada leitura pertence a um sensor.
-- **Dissalinizier → Sensor (1:N)** → Um sistema de dessalinização pode conter vários sensores, mas um sensor está associado a um sistema de dessalinização.
-- **Water Well → Sensor (1:N)** → Um poço de água pode ser monitorado por vários sensores, mas cada sensor pertence a um único poço de água.
-- **Plant → Address (1:1)** → Cada estação de tratamento tem um endereço.
-- **Plant → Region (N:1)** → Muitas estações podem estar dentro da mesma região.
-- **Plant → Reservoir (1:N)** → Uma estação pode conter vários reservatórios, mas um reservatório pertence a apenas uma estação.
-- **Plant → Dissalinizier (1:N)** → Uma estação pode ter múltiplos sistemas de dessalinização.
-- **Plant → Water Well (1:N)** → Uma estação pode gerenciar vários poços de água.
+- **Users → Address (1:N)**
+- - Address.UserID → Users(ID) com ON DELETE CASCADE garante que cada usuário possa ter 0…N endereços, e cada endereço pertence a exatamente um usuário.
+- Users → AuthorizationLevel (N:1)
+- Users.AuthLevelID → AuthorizationLevel(ID) modela muitos usuários para um mesmo nível de autorização.
+- Users ↔ Region (N:M)
+- Tabela UserRegion(UserID,RegionID) com FKs para Users e Region satisfaz o relacionamento many-to-many.
+- Plant → Region (N:1)
+- Plant.RegionID → Region(ID) atende a muitas estações numa mesma região.
+- Plant → Reservoir/Dissanilizer/WaterWell (1:N)
+- Cada uma das tabelas Reservoir, Dissanilizer e WaterWell possui PlantID → Plant(ID) com ON DELETE CASCADE.
+- Reservoir/Dissanilizer/WaterWell → Sensor (1:N) e Sensor → Read (1:N)
+- - O modelo polimórfico via ComponentType + SensorComponent(ComponentID) permite associar cada sensor a exatamente um componente (reservatório, dessalinizador ou poço) e cada um desses componentes poder ter 0…N sensores.
+- SensorRead.SensorID → Sensor(ID) atende ao 1:N de leituras por sensor.
 
 
 ## Requisitos
