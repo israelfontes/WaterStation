@@ -174,3 +174,37 @@ CREATE TABLE SensorRead (
     INDEX idx_sensor_datetime (SensorID, Datetime),
     INDEX idx_datetime (Datetime)
 );
+
+-- =================================================================
+-- INSERÇÃO DE DADOS INICIAIS
+-- =================================================================
+
+-- Tipos de componentes iniciais
+INSERT INTO ComponentType (ID, Name, TableName, Description) VALUES 
+(1, 'RESERVOIR', 'Reservoir', 'Reservatórios de armazenamento de água'),
+(2, 'DISSANILIZER', 'Dissanilizer', 'Sistemas de dessalinização'),
+(3, 'WATER_WELL', 'WaterWell', 'Poços de água subterrânea');
+
+-- Níveis de autorização iniciais
+INSERT INTO AuthorizationLevel (ID, Name) VALUES
+(1, 'ADMIN'),
+(2, 'MANAGER'),
+(3, 'OPERATOR'),
+(4, 'VIEWER');
+
+-- Usuário Admin (Senha 'admin_pass')
+INSERT INTO Users (Name, Email, Password, AuthLevelID, Status) 
+VALUES (
+    'Administrador Principal',
+    'admin@waterstation.com',
+    'hashed_admin_pass',
+    (SELECT ID FROM AuthorizationLevel WHERE Name = 'Admin'), -- Buscando AuthLevelID pelo nome
+    'ACTIVE'
+);
+
+-- Cadastro de regiões iniciais
+INSERT INTO Region (Name, Description) VALUES ('Norte', 'Região Norte da área de cobertura');
+INSERT INTO Region (Name, Description) VALUES ('Sul', 'Região Sul da área de cobertura');
+INSERT INTO Region (Name, Description) VALUES ('Leste', 'Região Leste da área de cobertura');
+INSERT INTO Region (Name, Description) VALUES ('Oeste', 'Região Oeste da área de cobertura');
+INSERT INTO Region (Name, Description) VALUES ('Centro', 'Região Centro da área de cobertura');
