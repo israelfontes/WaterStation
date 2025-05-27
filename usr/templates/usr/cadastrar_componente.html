@@ -1,0 +1,64 @@
+<!-- usr/templates/usr/cadastrar_componente.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Componente - Water Station</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'usr/css/form.css' %}">
+</head>
+<body>
+    <header class="form-header">
+        <h1>Cadastro de Componente Hídrico</h1>
+        <a href="{% url 'usr:home' %}" class="back-btn">← Voltar</a>
+    </header>
+
+    <main class="form-container">
+        <form method="post" class="form-card">
+            {% csrf_token %}
+            <fieldset>
+                <legend>Dados do Componente</legend>
+                <div class="form-group">
+                    {{ comp_form.name.label_tag }}
+                    {{ comp_form.name }}
+                </div>
+                <div class="form-group">
+                    {{ comp_form.table_name.label_tag }}
+                    {{ comp_form.table_name }}
+                </div>
+                <div class="form-group">
+                    {{ comp_form.description.label_tag }}
+                    {{ comp_form.description }}
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Dados do Sensor</legend>
+                <div class="form-group">
+                    {{ sensor_form.type.label_tag }}
+                    {{ sensor_form.type }}
+                </div>
+                <div class="form-group">
+                    {{ sensor_form.name.label_tag }}
+                    {{ sensor_form.name }}
+                </div>
+                <div class="form-group">
+                    {{ sensor_form.model.label_tag }}
+                    {{ sensor_form.model }}
+                </div>
+                <div class="form-group">
+                    {{ sensor_form.serial_number.label_tag }}
+                    {{ sensor_form.serial_number }}
+                </div>
+                <div class="form-group">
+                    {{ sensor_form.status.label_tag }}
+                    {{ sensor_form.status }}
+                </div>
+            </fieldset>
+
+            <button type="submit" class="submit-btn">Salvar Componente</button>
+        </form>
+    </main>
+</body>
+</html>
