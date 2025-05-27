@@ -1,41 +1,36 @@
-# usr/admin.py
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import *
-from .models import UserRegion
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth import get_user_model
+from .models import UserRegion, Address, Plant, ComponentType, Reservoir, Sensor
+
+Users = get_user_model()
 
 class UserRegionInline(admin.TabularInline):
     model = UserRegion
     extra = 1
 
-@admin.register(AuthorizationLevel)
-class AuthorizationLevelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name']
-    search_fields = ['name']
-
-@admin.register(Region)
-class RegionAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name', 'description']
-    search_fields = ['name']
-
 @admin.register(Users)
-class UsersAdmin(UserAdmin):
+class UsersAdmin(BaseUserAdmin):
+    # Exibir colunas: username, email, status, is_staff, is_superuser
+    list_display = ['username', 'email', 'status', 'is_staff', 'is_superuser']
+    list_filter = ['status', 'is_staff', 'is_superuser']
+    search_fields = ['username', 'email']
+    ordering = ['username']
     inlines = [UserRegionInline]
-    list_display = ['username', 'name', 'email', 'auth_level', 'status']
-    list_filter = ['auth_level', 'status', 'is_staff']
-    search_fields = ['username', 'name', 'email']
-    
-    fieldsets = UserAdmin.fieldsets + (
-        ('Informações Adicionais', {
-            'fields': ('name', 'auth_level', 'status')
-        }),
+
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        ('Informações Pessoais', {'fields': ('email',)}),
+        ('Status e Permissões', {'fields': ('status', 'is_active', 'is_staff', 'is_superuser')}),
+        ('Grupos e Permissões Específicas', {'fields': ('groups', 'user_permissions')}),
+        ('Datas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
 
 @admin.register(Address)
 class AddressAdmin(admin.ModelAdmin):
     list_display = ['id', 'street', 'city', 'state', 'user']
     list_filter = ['state', 'city']
-    search_fields = ['street', 'city', 'user__name']
+    search_fields = ['street', 'city', 'user__username']
 
 @admin.register(Plant)
 class PlantAdmin(admin.ModelAdmin):

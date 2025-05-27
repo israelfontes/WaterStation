@@ -180,3 +180,9 @@ body {
         padding: 30px 20px;
     }
 }
+.dashboard-grid {
+    display: flex;
+    justify-content: center;   /* centraliza horizontalmente */
+    gap: 40px;                  /* espaço entre os botões */
+    flex-wrap: wrap;           /* permite responsividade em telas menores */
+}

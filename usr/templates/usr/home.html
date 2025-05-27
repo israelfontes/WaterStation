@@ -13,8 +13,8 @@
         <div class="header-content">
             <h1>Water Station</h1>
             <div class="user-info">
-                <span>Bem-vindo, {{ user.name|default:user.username }}!</span>
-                <form action="{% url 'usr:logout' %}" method="post" style="display:inline;">
+                <span>Bem-vindo, {{ user.username }}!</span>
+                <form method="post" action="{% url 'usr:logout' %}" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="logout-btn">Sair</button>
                 </form>
@@ -23,35 +23,19 @@
     </header>
 
     <main class="main-content">
-        <div class="dashboard">
-            <h2>Painel de Controle</h2>
-            
-            <div class="button-grid">
-                <a href="{% url 'usr:cadastrar_usuario' %}" class="dashboard-btn">
-                    <div class="btn-icon">👤</div>
-                    <h3>Cadastrar Usuário</h3>
-                    <p>Adicionar novos usuários ao sistema</p>
-                </a>
-                
-                <a href="{% url 'usr:cadastrar_endereco' %}" class="dashboard-btn">
-                    <div class="btn-icon">📍</div>
-                    <h3>Cadastrar Endereço</h3>
-                    <p>Gerenciar endereços das estações</p>
-                </a>
-                
-                <a href="{% url 'usr:cadastrar_componente' %}" class="dashboard-btn">
-                    <div class="btn-icon">⚙️</div>
-                    <h3>Componente Hídrico</h3>
-                    <p>Cadastrar reservatórios e equipamentos</p>
-                </a>
-                
-                <a href="{% url 'usr:instalar_sensor' %}" class="dashboard-btn">
-                    <div class="btn-icon">📡</div>
-                    <h3>Instalar Sensores</h3>
-                    <p>Configurar sensores nos componentes</p>
-                </a>
-            </div>
+        <div class="dashboard dashboard-grid">
+            <a href="{% url 'usr:cadastrar_usuario' %}" class="dashboard-btn">
+                <div class="btn-icon">👤</div>
+                <h3>Cadastrar Usuário</h3>
+                <p>Adicionar usuários e endereços</p>
+            </a>
+            <a href="{% url 'usr:cadastrar_componente' %}" class="dashboard-btn">
+                <div class="btn-icon">⚙️</div>
+                <h3>Cadastrar Componente</h3>
+                <p>Adicionar componente hídrico e sensor</p>
+            </a>
         </div>
     </main>
+
 </body>
 </html>
