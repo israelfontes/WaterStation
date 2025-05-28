@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ plant.name }} - WaterStation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-industry"></i> {{ plant.name }}</h2>
+            <a href="{% url 'plant_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Informações da Planta</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Nome:</strong> {{ plant.name }}</p>
+                <p><strong>Tipo:</strong> 
+                    {% if plant.plant_type == 'small' %}Pequena
+                    {% elif plant.plant_type == 'medium' %}Média
+                    {% else %}Grande
+                    {% endif %}
+                </p>
+                <p><strong>Região:</strong> {{ plant.region.name }}</p>
+                <p><strong>Endereço:</strong> {{ plant.address }}</p>
+                <p><strong>Status:</strong>
+                    {% if plant.is_active %}
+                        <span class="badge bg-success">Ativa</span>
+                    {% else %}
+                        <span class="badge bg-danger">Inativa</span>
+                    {% endif %}
+                </p>
+                <p><strong>Criada em:</strong> {{ plant.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tachometer-alt"></i> Status dos Componentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <h6><i class="fas fa-water"></i> Poço: {{ plant.water_well.name }}</h6>
+                        <small class="text-muted">Profundidade: {{ plant.water_well.depth }}m</small>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <h6><i class="fas fa-filter"></i> Dessalinizador: {{ plant.dissalinator.name }}</h6>
+                        <small class="text-muted">Capacidade: {{ plant.dissalinator.capacity }} L/h</small>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <h6><i class="fas fa-database"></i> Reservatório: {{ plant.reservoir.name }}</h6>
+                        <small class="text-muted">Capacidade: {{ plant.reservoir.capacity }} L</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sensores do Poço -->
+{% if water_well_readings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-water"></i> Sensores do Poço</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for reading in water_well_readings %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">{{ reading.sensor.name }}</h6>
+                                <h4 class="text-primary">{{ reading.reading.value }} {{ reading.sensor.unit }}</h4>
+                                <small class="text-muted">{{ reading.reading.timestamp|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Sensores do Dessalinizador -->
+{% if dissalinator_readings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-filter"></i> Sensores do Dessalinizador</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for reading in dissalinator_readings %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">{{ reading.sensor.name }}</h6>
+                                <h4 class="text-warning">{{ reading.reading.value }} {{ reading.sensor.unit }}</h4>
+                                <small class="text-muted">{{ reading.reading.timestamp|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Sensores do Reservatório -->
+{% if reservoir_readings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-database"></i> Sensores do Reservatório</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for reading in reservoir_readings %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">{{ reading.sensor.name }}</h6>
+                                <h4 class="text-success">{{ reading.reading.value }} {{ reading.sensor.unit }}</h4>
+                                <small class="text-muted">{{ reading.reading.timestamp|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if not water_well_readings and not dissalinator_readings and not reservoir_readings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Nenhuma leitura de sensor disponível para esta planta.
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

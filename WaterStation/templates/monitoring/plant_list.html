@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Plantas - WaterStation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-industrie"></i> Plantas de Dessalinização</h2>
+            <a href="{% url 'plant_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nova Planta
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total de Plantas</h6>
+                        <h3>{{ total_plants }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-industry fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Região</th>
+                                <th>Cidade</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plant in plants %}
+                            <tr>
+                                <td>{{ plant.name }}</td>
+                                <td>
+                                    {% if plant.plant_type == 'small' %}Pequena
+                                    {% elif plant.plant_type == 'medium' %}Média
+                                    {% else %}Grande
+                                    {% endif %}
+                                </td>
+                                <td>{{ plant.region.name }}</td>
+                                <td>{{ plant.address.city }}/{{ plant.address.state }}</td>
+                                <td>
+                                    {% if plant.is_active %}
+                                        <span class="badge bg-success">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativa</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Nenhuma planta encontrada</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
