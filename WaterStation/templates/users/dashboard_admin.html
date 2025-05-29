@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin - WaterStation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt"></i> Dashboard Administrativo</h2>
+        <p class="text-muted">Visão geral do sistema WaterStation</p>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Usuários</h6>
+                        <h3>{{ total_users }}</h3>
+                        <small>Total no sistema</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'user_list' %}" class="text-white text-decoration-none">
+                    <i class="fas fa-arrow-right"></i> Gerenciar usuários
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Plantas</h6>
+                        <h3>{{ total_plants }}</h3>
+                        <small>{{ active_plants }} ativas</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-industry fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'plant_list' %}" class="text-white text-decoration-none">
+                    <i class="fas fa-arrow-right"></i> Gerenciar plantas
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Regiões</h6>
+                        <h3>{{ total_regions }}</h3>
+                        <small>Áreas cobertas</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-map-marked-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/admin/monitoring/region/" class="text-white text-decoration-none">
+                    <i class="fas fa-arrow-right"></i> Ver regiões
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Sensores</h6>
+                        <h3>{{ total_sensors }}</h3>
+                        <small>Dispositivos IoT</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-microchip fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="/admin/monitoring/sensor/" class="text-dark text-decoration-none">
+                    <i class="fas fa-arrow-right"></i> Gerenciar sensores
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status das Plantas -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Status das Plantas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <h4 class="text-success">{{ active_plants }}</h4>
+                        <small class="text-muted">Ativas</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-danger">{{ inactive_plants }}</h4>
+                        <small class="text-muted">Inativas</small>
+                    </div>
+                </div>
+                <div class="progress mt-3">
+                    {% widthratio active_plants total_plants 100 as active_percentage %}
+                    <div class="progress-bar bg-success" style="width: {{ active_percentage }}%"></div>
+                </div>
+                <small class="text-muted">{{ active_percentage }}% das plantas estão ativas</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-users"></i> Usuários Recentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Nível</th>
+                                <th>Data</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr>
+                                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ user.auth_level|default:"N/A" }}
+                                    </span>
+                                </td>
+                                <td>{{ user.created_at|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Ativo</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">Nenhum usuário encontrado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plantas Recentes -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-industry"></i> Plantas Recentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Tipo</th>
+                                <th>Região</th>
+                                <th>Localização</th>
+                                <th>Status</th>
+                                <th>Criada em</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plant in recent_plants %}
+                            <tr>
+                                <td>
+                                    <strong>{{ plant.name }}</strong>
+                                </td>
+                                <td>
+                                    {% if plant.plant_type == 'small' %}
+                                        <span class="badge bg-info">Pequena</span>
+                                    {% elif plant.plant_type == 'medium' %}
+                                        <span class="badge bg-warning">Média</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Grande</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ plant.region.name }}</td>
+                                <td>{{ plant.address.city }}/{{ plant.address.state }}</td>
+                                <td>
+                                    {% if plant.is_active %}
+                                        <span class="badge bg-success">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativa</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ plant.created_at|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Nenhuma planta encontrada</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Links Rápidos -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-link"></i> Acesso Rápido</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'user_create' %}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-user-plus"></i> Novo Usuário
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'plant_create' %}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-plus"></i> Nova Planta
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/admin/" class="btn btn-outline-info w-100 mb-2" target="_blank">
+                            <i class="fas fa-cog"></i> Django Admin
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="/api/docs/" class="btn btn-outline-warning w-100 mb-2" target="_blank">
+                            <i class="fas fa-code"></i> API Docs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

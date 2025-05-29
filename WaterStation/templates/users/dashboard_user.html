@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - WaterStation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2><i class="fas fa-tachometer-alt"></i> Monitoramento de Plantas</h2>
+        <p class="text-muted">
+            Bem-vindo, {{ user.first_name|default:user.username }}! 
+            <span class="badge bg-primary">{{ user.auth_level|default:"Usuário" }}</span>
+        </p>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas das Plantas -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total de Plantas</h6>
+                        <h3>{{ total_plants }}</h3>
+                        <small>No sistema</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-industry fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Plantas Ativas</h6>
+                        <h3>{{ active_plants }}</h3>
+                        <small>Em operação</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Plantas Inativas</h6>
+                        <h3>{{ inactive_plants }}</h3>
+                        <small>Fora de operação</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Regiões</h6>
+                        <h3>{{ total_regions }}</h3>
+                        <small>Áreas cobertas</small>
+                    </div>
+                    <div>
+                        <i class="fas fa-map-marked-alt fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas de Plantas -->
+{% if plants_with_alerts %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5><i class="fas fa-exclamation-triangle"></i> Alertas de Sensores</h5>
+            </div>
+            <div class="card-body">
+                {% for item in plants_with_alerts %}
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-industry"></i> {{ item.plant.name }}</h6>
+                    <ul class="mb-0">
+                        {% for alert in item.alerts %}
+                        <li>{{ alert }}</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'plant_detail' item.plant.pk %}" class="btn btn-sm btn-warning mt-2">
+                        <i class="fas fa-eye"></i> Ver Detalhes
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Plantas por Região e Tipo -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-map-marked-alt"></i> Plantas por Região</h5>
+            </div>
+            <div class="card-body">
+                {% for region in plants_by_region %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ region.name }}</span>
+                    <span class="badge bg-primary">{{ region.plant_count }}</span>
+                </div>
+                <div class="progress mb-3">
+                    {% widthratio region.plant_count total_plants 100 as percentage %}
+                    <div class="progress-bar" style="width: {{ percentage }}%"></div>
+                </div>
+                {% empty %}
+                <p class="text-muted">Nenhuma região com plantas encontrada.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Plantas por Tipo</h5>
+            </div>
+            <div class="card-body">
+                {% for type_data in plants_by_type %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>
+                        {% if type_data.plant_type == 'small' %}
+                            <i class="fas fa-circle text-info"></i> Pequena
+                        {% elif type_data.plant_type == 'medium' %}
+                            <i class="fas fa-circle text-warning"></i> Média
+                        {% else %}
+                            <i class="fas fa-circle text-primary"></i> Grande
+                        {% endif %}
+                    </span>
+                    <span class="badge bg-secondary">{{ type_data.count }}</span>
+                </div>
+                {% empty %}
+                <p class="text-muted">Nenhuma planta encontrada.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estatísticas de Sensores -->
+{% if sensor_stats %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line"></i> Estatísticas de Sensores (Últimas 24h)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for stat in sensor_stats %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">
+                                    {% if stat.sensor__sensor_type == 'temperature' %}
+                                        <i class="fas fa-thermometer-half text-danger"></i> Temperatura
+                                    {% elif stat.sensor__sensor_type == 'ph' %}
+                                        <i class="fas fa-vial text-success"></i> pH
+                                    {% elif stat.sensor__sensor_type == 'salinity' %}
+                                        <i class="fas fa-tint text-info"></i> Salinidade
+                                    {% elif stat.sensor__sensor_type == 'flow' %}
+                                        <i class="fas fa-water text-primary"></i> Fluxo
+                                    {% elif stat.sensor__sensor_type == 'pressure' %}
+                                        <i class="fas fa-gauge text-warning"></i> Pressão
+                                    {% elif stat.sensor__sensor_type == 'level' %}
+                                        <i class="fas fa-chart-bar text-secondary"></i> Nível
+                                    {% endif %}
+                                </h6>
+                                <p class="mb-1">
+                                    <strong>Média:</strong> {{ stat.avg_value|floatformat:2 }} {{ stat.sensor__unit }}
+                                </p>
+                                <p class="mb-1">
+                                    <strong>Máximo:</strong> {{ stat.max_value|floatformat:2 }} {{ stat.sensor__unit }}
+                                </p>
+                                <small class="text-muted">{{ stat.count }} leituras</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Últimas Leituras -->
+{% if recent_readings %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-clock"></i> Últimas Leituras de Sensores</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Sensor</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Data/Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reading in recent_readings %}
+                            <tr>
+                                <td>{{ reading.sensor.name }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ reading.sensor.get_sensor_type_display }}</span>
+                                </td>
+                                <td>
+                                    <strong>{{ reading.value }} {{ reading.sensor.unit }}</strong>
+                                </td>
+                                <td>
+                                    <small>{{ reading.timestamp|date:"d/m/Y H:i:s" }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Plantas Recentes -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-industry"></i> Plantas no Sistema</h5>
+                    <a href="{% url 'plant_list' %}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Ver Todas
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for plant in recent_plants %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card {% if plant.is_active %}border-success{% else %}border-warning{% endif %}">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-industry"></i> {{ plant.name }}
+                                </h6>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ plant.region.name }}<br>
+                                        <i class="fas fa-location-dot"></i> {{ plant.address.city }}/{{ plant.address.state }}
+                                    </small>
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge {% if plant.is_active %}bg-success{% else %}bg-warning{% endif %}">
+                                        {% if plant.is_active %}Ativa{% else %}Inativa{% endif %}
+                                    </span>
+                                    <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="text-center text-muted">
+                            <i class="fas fa-industry fa-3x mb-3"></i>
+                            <h5>Nenhuma planta encontrada</h5>
+                            <p>Entre em contato com o administrador para cadastrar plantas no sistema.</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ações Rápidas -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-bolt"></i> Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'plant_list' %}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-list"></i> Listar Plantas
+                        </a>
+                    </div>
+                    {% if user.auth_level.name == 'Admin' or user.auth_level.name == 'Operador' %}
+                    <div class="col-md-3">
+                        <a href="{% url 'plant_create' %}" class="btn btn-outline-success w-100 mb-2">
+                            <i class="fas fa-plus"></i> Nova Planta
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-3">
+                        <a href="/api/docs/" class="btn btn-outline-info w-100 mb-2" target="_blank">
+                            <i class="fas fa-code"></i> API Docs
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-secondary w-100 mb-2" onclick="location.reload()">
+                            <i class="fas fa-refresh"></i> Atualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-atualizar página a cada 5 minutos para dados em tempo real
+setTimeout(function() {
+    location.reload();
+}, 300000); // 5 minutos
+
+// Mostrar hora atual
+function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('pt-BR');
+    const dateString = now.toLocaleDateString('pt-BR');
+    
+    // Se existir um elemento para mostrar a hora
+    const clockElement = document.getElementById('current-time');
+    if (clockElement) {
+        clockElement.textContent = `${dateString} ${timeString}`;
+    }
+}
+
+// Atualizar relógio a cada segundo
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.progress {
+    height: 8px;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+@media (max-width: 768px) {
+    .col-md-3, .col-md-4, .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+{% endblock %}

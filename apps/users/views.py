@@ -35,11 +35,114 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    context = {
-        'total_users': CustomUser.objects.count(),
-        'recent_users': CustomUser.objects.order_by('-created_at')[:5],
-    }
-    return render(request, 'users/dashboard.html', context)
+    user = request.user
+    
+    # Verificar se é administrador
+    is_admin = (user.is_superuser or 
+                user.is_staff or 
+                (user.auth_level and user.auth_level.name == 'Admin'))
+    
+    if is_admin:
+        # Dashboard do Administrador
+        from apps.monitoring.models import Plant, Region, Sensor, SensorReading
+        
+        context = {
+            'is_admin': True,
+            'total_users': CustomUser.objects.count(),
+            'total_plants': Plant.objects.count(),
+            'total_regions': Region.objects.count(),
+            'total_sensors': Sensor.objects.count(),
+            'active_plants': Plant.objects.filter(is_active=True).count(),
+            'inactive_plants': Plant.objects.filter(is_active=False).count(),
+            'recent_users': CustomUser.objects.order_by('-created_at')[:5],
+            'recent_plants': Plant.objects.select_related('region', 'address').order_by('-created_at')[:5],
+        }
+        return render(request, 'users/dashboard_admin.html', context)
+    
+    else:
+        # Dashboard do Usuário Normal (Operador/Visualizador)
+        from apps.monitoring.models import Plant, Region, SensorReading
+        from django.db.models import Count, Avg, Max
+        from datetime import datetime, timedelta
+        
+        # Estatísticas das plantas
+        plants = Plant.objects.select_related('region', 'address', 'water_well', 'dissalinator', 'reservoir')
+        
+        # Plantas por região
+        plants_by_region = Region.objects.annotate(
+            plant_count=Count('plant')
+        ).filter(plant_count__gt=0)
+        
+        # Plantas por tipo
+        plants_by_type = Plant.objects.values('plant_type').annotate(
+            count=Count('id')
+        ).order_by('plant_type')
+        
+        # Últimas leituras de sensores (últimas 24 horas)
+        last_24h = datetime.now() - timedelta(hours=24)
+        recent_readings = SensorReading.objects.select_related('sensor').filter(
+            timestamp__gte=last_24h
+        ).order_by('-timestamp')[:10]
+        
+        # Estatísticas por tipo de sensor nas últimas 24h
+        sensor_stats = SensorReading.objects.filter(
+            timestamp__gte=last_24h
+        ).values('sensor__sensor_type', 'sensor__unit').annotate(
+            avg_value=Avg('value'),
+            max_value=Max('value'),
+            count=Count('id')
+        ).order_by('sensor__sensor_type')
+        
+        # Plantas com alertas (simulado - sensores fora da faixa normal)
+        plants_with_alerts = []
+        for plant in plants.filter(is_active=True):
+            alerts = []
+            
+            # Verificar sensores do poço
+            for sensor in plant.water_well.sensors.all():
+                latest_reading = sensor.readings.first()
+                if latest_reading and sensor.max_value and latest_reading.value > sensor.max_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (máx: {sensor.max_value})")
+                elif latest_reading and sensor.min_value and latest_reading.value < sensor.min_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (mín: {sensor.min_value})")
+            
+            # Verificar sensores do dessalinizador
+            for sensor in plant.dissalinator.sensors.all():
+                latest_reading = sensor.readings.first()
+                if latest_reading and sensor.max_value and latest_reading.value > sensor.max_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (máx: {sensor.max_value})")
+                elif latest_reading and sensor.min_value and latest_reading.value < sensor.min_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (mín: {sensor.min_value})")
+            
+            # Verificar sensores do reservatório
+            for sensor in plant.reservoir.sensors.all():
+                latest_reading = sensor.readings.first()
+                if latest_reading and sensor.max_value and latest_reading.value > sensor.max_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (máx: {sensor.max_value})")
+                elif latest_reading and sensor.min_value and latest_reading.value < sensor.min_value:
+                    alerts.append(f"{sensor.name}: {latest_reading.value} {sensor.unit} (mín: {sensor.min_value})")
+            
+            if alerts:
+                plants_with_alerts.append({
+                    'plant': plant,
+                    'alerts': alerts
+                })
+        
+        context = {
+            'is_admin': False,
+            'user': user,
+            'total_plants': plants.count(),
+            'active_plants': plants.filter(is_active=True).count(),
+            'inactive_plants': plants.filter(is_active=False).count(),
+            'total_regions': Region.objects.count(),
+            'plants_by_region': plants_by_region,
+            'plants_by_type': plants_by_type,
+            'recent_readings': recent_readings,
+            'sensor_stats': sensor_stats,
+            'plants_with_alerts': plants_with_alerts,
+            'recent_plants': plants.order_by('-created_at')[:6],
+        }
+        return render(request, 'users/dashboard_user.html', context)
 
 @login_required
 def user_list(request):
