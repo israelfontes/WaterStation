@@ -1,88 +1,149 @@
-# Water Station Management System
+# WaterStation - Sistema de Monitoramento de Dessalinização
 
-## Overview
+Sistema web para monitoramento e gerenciamento de plantas de dessalinização de água, desenvolvido em Django com API REST para integração com sensores IoT.
 
-Water Station é um sistema de gerenciamento completo para monitoramento de estações de extração e distribuição de água, desenvolvido com Django e arquitetura MVC. O sistema permite o controle e monitoramento em tempo real de reservatórios, dessalinizadores e poços de água, utilizando sensores IoT para coleta de dados.
+## 📋 Funcionalidades
 
-![Sistema Water Station](WaterStation_1.png)
+- **Gerenciamento de Usuários**: Admin, Operador e Visualizador
+- **Monitoramento de Plantas**: Poços, dessalinizadores e reservatórios
+- **Sensores IoT**: Temperatura, pH, salinidade, fluxo, pressão e nível
+- **Dashboard em Tempo Real**: Alertas e estatísticas
+- **API REST**: Para integração com dispositivos IoT
 
-## Funcionalidades
+## 🚀 Como Executar
 
-### Gerenciamento de Usuários e Permissões
-- Sistema de autenticação e autorização
-- Níveis de permissão personalizáveis
-- Perfis de usuário com informações de contato e endereço
+### 1. Preparar o Ambiente
 
-### Cenários e Plantas
-- Criação e gerenciamento de múltiplos cenários de operação
-- Configuração de plantas com localização geográfica
-- Compartilhamento de cenários entre usuários
+```bash
+# Clone o repositório
+git clone <url-do-repositorio>
+cd WaterStation
 
-### Componentes Hídricos
-- Gerenciamento de reservatórios com tipo e capacidade
-- Monitoramento de dessalinizadores com controle de alcalinidade
-- Rastreamento de poços de água com medição de fluxo
+# Criar ambiente virtual
+python -m venv venv
 
-### Sensores e Leituras
-- Suporte a múltiplos tipos de sensores (temperatura, pressão, pH, fluxo)
-- Rastreamento em tempo real de leituras
-- Histórico de medições com timestamp
+# Ativar ambiente virtual
+# No Windows:
+venv\Scripts\activate
+# No Mac/Linux:
+source venv/bin/activate
 
-### Dashboard e Análises
-- Painel de controle com visão geral do sistema
-- Gráficos e visualizações de dados
-- Relatórios personalizáveis
+# Instalar dependências
+pip install -r requirements.txt
+```
 
-### API RESTful
-- API completa para integração com outros sistemas
-- Documentação de endpoints
-- Autenticação segura
+### 2. Configurar o Banco de Dados
 
-## Tecnologias
+```bash
+# Executar migrações
+python manage.py migrate
 
-- **Backend**: Django 5.0+
-- **Frontend**: HTML, CSS, JavaScript, Bootstrap 5
-- **Banco de Dados**: PostgreSQL (recomendado), SQLite (desenvolvimento), MariaDB (prévia)
-- **Autenticação**: Django Authentication System
-- **API**: Django REST Framework
+# Criar dados iniciais (níveis de autorização, regiões, etc)
+python manage.py setup_initial_data
 
-## Cardinalidades
+# (Opcional) Criar dados de teste
+python manage.py populate_test_data
+```
 
-- **Users → Address (1:N):**
-  - *Address.UserID → Users(ID)* com `ON DELETE CASCADE` garante que cada usuário possa ter 0…N endereços, e cada endereço pertence a exatamente um usuário.
+### 3. Executar o Servidor
 
-- **Users → AuthorizationLevel (N:1):**
-  - *Users.AuthLevelID → AuthorizationLevel(ID)* modela muitos usuários para um mesmo nível de autorização.
+```bash
+python manage.py runserver
+```
 
-- **Users ↔ Region (N:M):**
-  - Tabela *UserRegion(UserID,RegionID)* com FKs para *Users* e *Region* satisfaz o relacionamento many-to-many.
+O sistema estará disponível em: http://127.0.0.1:8000
 
-- **Plant → Region (N:1):**
-  - *Plant.RegionID → Region(ID)* atende a muitas estações numa mesma região.
+## 👤 Usuários Padrão
 
-- **Plant → Reservoir/Dissanilizer/WaterWell (1:N):**
-  - Cada uma das tabelas *Reservoir*, *Dissanilizer* e *WaterWell* possui *PlantID → Plant(ID)* com `ON DELETE CASCADE`.
+Após executar `setup_initial_data`, será criado:
 
-- **Reservoir/Dissanilizer/WaterWell → Sensor (1:N) e Sensor → Read (1:N):**
-  - O modelo polimórfico via *ComponentType + SensorComponent(ComponentID)* permite associar cada sensor a exatamente um componente (reservatório, dessalinizador ou poço) e cada um desses componentes poder ter 0…N sensores.
-  - *SensorRead.SensorID → Sensor(ID)* atende ao 1:N de leituras por sensor.
+- **Admin**: admin@waterstation.com / admin123
+- **Operador**: operador1@waterstation.com / op123456  
+- **Visualizador**: visualizador1@waterstation.com / vis123456
 
+## 📡 Simulador de Sensores
 
-## Requisitos
+O sistema inclui um simulador Python para testar o envio de dados de sensores.
 
-- Python 3.10+
-- Django 5.0+
-- PostgreSQL ou SQLite
-- Outras dependências listadas em `requirements.txt`
+### Como Usar o Simulador
 
-## Contribuição
+```bash
+# Executar o simulador
+python sample_sensor.py
+```
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request para branch develop
+### Opções do Simulador
 
-## Licença
+1. **Simular sensor de temperatura** - Envia dados de temperatura por 2 minutos
+2. **Simular sensor de pH** - Envia dados de pH por 2 minutos  
+3. **Simular sensor de salinidade** - Envia dados de salinidade por 2 minutos
+4. **Enviar leitura única** - Envia um valor específico para um sensor
+5. **Teste múltiplos sensores** - Testa vários sensores simultaneamente
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+### Exemplo de Uso da API
+
+```python
+import requests
+
+# Login na API
+response = requests.post('http://127.0.0.1:8000/api/users/token/', {
+    'email': 'admin@waterstation.com',
+    'password': 'admin123'
+})
+token = response.json()['access']
+
+# Enviar dados do sensor
+headers = {'Authorization': f'Bearer {token}'}
+data = {
+    'sensor_id': 1,
+    'value': 25.5
+}
+requests.post('http://127.0.0.1:8000/api/monitoring/sensor-data/', 
+              json=data, headers=headers)
+```
+
+## 🔧 Estrutura do Sistema
+
+### Níveis de Usuário
+
+- **Admin**: Gerencia usuários e plantas
+- **Operador**: Gerencia apenas plantas  
+- **Visualizador**: Apenas visualização
+
+### Componentes de uma Planta
+
+- **Poço de Água**: Com sensores de temperatura, pH, salinidade
+- **Dessalinizador**: Com sensores de fluxo e pressão
+- **Reservatório**: Com sensores de nível e temperatura
+
+## 📚 URLs Principais
+
+- **Dashboard**: http://127.0.0.1:8000/
+- **Login**: http://127.0.0.1:8000/login/
+- **Plantas**: http://127.0.0.1:8000/monitoring/plants/
+- **API Docs**: http://127.0.0.1:8000/api/docs/
+- **Admin**: http://127.0.0.1:8000/admin/
+
+## 🛠️ Tecnologias
+
+- **Backend**: Django 4.2 + Django REST Framework
+- **Frontend**: Bootstrap 5 + JavaScript
+- **Banco de Dados**: SQLite (desenvolvimento)
+- **API**: JWT Authentication
+
+## 📖 Comandos Úteis
+
+```bash
+# Resetar banco de dados
+python manage.py flush
+
+# Criar dados iniciais novamente
+python manage.py setup_initial_data
+
+# Ver logs do servidor
+python manage.py runserver --verbosity=2
+```
+
+---
+
+**Desenvolvido para monitoramento de plantas de dessalinização com foco em simplicidade e eficiência.**

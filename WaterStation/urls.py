@@ -10,7 +10,7 @@ def redirect_to_dashboard(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('apps.users.urls')),
+    path('', redirect_to_dashboard, name='home'),
     path('users/', include('apps.users.urls')),
     path('monitoring/', include('apps.monitoring.urls')),
     

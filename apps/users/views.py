@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.core.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import CustomUser, Address, AuthorizationLevel
 from .forms import UserForm, LoginForm
@@ -37,10 +38,8 @@ def logout_view(request):
 def dashboard(request):
     user = request.user
     
-    # Verificar se é administrador
-    is_admin = (user.is_superuser or 
-                user.is_staff or 
-                (user.auth_level and user.auth_level.name == 'Admin'))
+    # Verificar se é administrador (apenas Admin, não Operador)
+    is_admin = check_admin_permission(user)
     
     if is_admin:
         # Dashboard do Administrador
@@ -141,16 +140,39 @@ def dashboard(request):
             'sensor_stats': sensor_stats,
             'plants_with_alerts': plants_with_alerts,
             'recent_plants': plants.order_by('-created_at')[:6],
+            # Adicionar informações sobre permissões do usuário
+            'can_manage_plants': check_plant_permission(user),
+            'user_role': user.auth_level.name if user.auth_level else 'Usuário'
         }
         return render(request, 'users/dashboard_user.html', context)
 
+def check_admin_permission(user):
+    """Verifica se o usuário tem permissão de ADMINISTRADOR (apenas Admin)"""
+    return (user.is_superuser or 
+            user.is_staff or 
+            (user.auth_level and user.auth_level.name == 'Admin'))
+
+def check_plant_permission(user):
+    """Verifica se o usuário tem permissão para gerenciar PLANTAS (Admin + Operador)"""
+    return (user.is_superuser or 
+            user.is_staff or 
+            (user.auth_level and user.auth_level.name in ['Admin', 'Operador']))
+
 @login_required
 def user_list(request):
+    # Verificar se é admin
+    if not check_admin_permission(request.user):
+        raise PermissionDenied("Apenas administradores podem gerenciar usuários.")
+    
     users = CustomUser.objects.all().order_by('-created_at')
     return render(request, 'users/user_list.html', {'users': users})
 
 @login_required
 def user_create(request):
+    # Verificar se é admin
+    if not check_admin_permission(request.user):
+        raise PermissionDenied("Apenas administradores podem criar usuários.")
+    
     if request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
@@ -163,6 +185,10 @@ def user_create(request):
 
 @login_required
 def user_edit(request, pk):
+    # Verificar se é admin
+    if not check_admin_permission(request.user):
+        raise PermissionDenied("Apenas administradores podem editar usuários.")
+    
     user = get_object_or_404(CustomUser, pk=pk)
     if request.method == 'POST':
         form = UserForm(request.POST, instance=user)
@@ -176,6 +202,10 @@ def user_edit(request, pk):
 
 @login_required
 def user_delete(request, pk):
+    # Verificar se é admin
+    if not check_admin_permission(request.user):
+        raise PermissionDenied("Apenas administradores podem remover usuários.")
+    
     user = get_object_or_404(CustomUser, pk=pk)
     if request.method == 'POST':
         email = user.email

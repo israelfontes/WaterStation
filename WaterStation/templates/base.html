@@ -42,7 +42,7 @@
                         <i class="fas fa-industry"></i> Plantas
                     </a>
                     
-                    <!-- Menu apenas para Admin -->
+                    <!-- Menu APENAS para Admin (não para Operador) -->
                     {% if user.is_superuser or user.is_staff or user.auth_level.name == 'Admin' %}
                     <a class="nav-link" href="{% url 'user_list' %}">
                         <i class="fas fa-users"></i> Usuários
@@ -66,11 +66,25 @@
                     </div>
                     {% endif %}
                     
-                    <!-- Menu para Operadores -->
-                    {% if user.auth_level.name == 'Admin' or user.auth_level.name == 'Operador' %}
+                    <!-- Menu para Admin E Operadores (gerenciamento de plantas) -->
+                    {% if user.is_superuser or user.is_staff or user.auth_level.name == 'Admin' or user.auth_level.name == 'Operador' %}
                     <a class="nav-link" href="{% url 'plant_create' %}">
                         <i class="fas fa-plus"></i> Nova Planta
                     </a>
+                    {% endif %}
+                    
+                    <!-- Menu apenas para Operadores (sem acesso a usuários) -->
+                    {% if user.auth_level.name == 'Operador' and not user.is_superuser and not user.is_staff %}
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i> Ferramentas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/api/docs/" target="_blank">
+                                <i class="fas fa-code"></i> API Docs
+                            </a></li>
+                        </ul>
+                    </div>
                     {% endif %}
                 </div>
                 
@@ -85,7 +99,7 @@
                             {% endif %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <la class="dropdown-header">
+                            <li class="dropdown-header">
                                 <small>{{ user.email }}</small>
                             </li>
                             <li><hr class="dropdown-divider"></li>

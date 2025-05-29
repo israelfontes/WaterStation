@@ -23,8 +23,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_spectacular',
     'apps.users',
-    'apps.monitoring',
-    'apps.core',
+    'apps.monitoring'
 ]
 
 MIDDLEWARE = [

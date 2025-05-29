@@ -15,8 +15,14 @@ from .serializers import (
     SensorReadingSerializer
 )
 
+def check_admin_permission(user):
+    """Verifica se o usuário tem permissão de ADMINISTRADOR (apenas Admin)"""
+    return (user.is_superuser or 
+            user.is_staff or 
+            (user.auth_level and user.auth_level.name == 'Admin'))
+
 def check_plant_permission(user):
-    """Verifica se o usuário tem permissão para gerenciar plantas"""
+    """Verifica se o usuário tem permissão para gerenciar PLANTAS (Admin + Operador)"""
     return (user.is_superuser or 
             user.is_staff or 
             (user.auth_level and user.auth_level.name in ['Admin', 'Operador']))
