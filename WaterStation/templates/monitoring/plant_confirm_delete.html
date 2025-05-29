@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - {{ plant.name }} - WaterStation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-exclamation-triangle text-danger"></i> Confirmar Exclusão</h2>
+            <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-trash"></i> Remover Planta</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Atenção!</strong> Esta ação não pode ser desfeita.
+                </div>
+                
+                <p>Tem certeza que deseja remover a planta <strong>{{ plant.name }}</strong>?</p>
+                
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info-circle"></i> Detalhes da Planta</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nome:</strong> {{ plant.name }}</p>
+                                <p><strong>Tipo:</strong> 
+                                    {% if plant.plant_type == 'small' %}Pequena
+                                    {% elif plant.plant_type == 'medium' %}Média
+                                    {% else %}Grande
+                                    {% endif %}
+                                </p>
+                                <p><strong>Região:</strong> {{ plant.region.name }}</p>
+                                <p><strong>Status:</strong>
+                                    {% if plant.is_active %}
+                                        <span class="badge bg-success">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inativa</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Localização:</strong> {{ plant.address.city }}/{{ plant.address.state }}</p>
+                                <p><strong>Endereço:</strong> {{ plant.address.street }}, {{ plant.address.number }}</p>
+                                <p><strong>Criada em:</strong> {{ plant.created_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Componentes que serão removidos -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-cogs"></i> Componentes que serão removidos</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-water fa-2x text-primary mb-2"></i>
+                                    <h6>{{ plant.water_well.name }}</h6>
+                                    <small class="text-muted">Profundidade: {{ plant.water_well.depth }}m</small>
+                                    <br>
+                                    <small class="text-muted">{{ plant.water_well.sensors.count }} sensor(es)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-filter fa-2x text-warning mb-2"></i>
+                                    <h6>{{ plant.dissalinator.name }}</h6>
+                                    <small class="text-muted">Capacidade: {{ plant.dissalinator.capacity }} L/h</small>
+                                    <br>
+                                    <small class="text-muted">{{ plant.dissalinator.sensors.count }} sensor(es)</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center p-3 border rounded">
+                                    <i class="fas fa-database fa-2x text-success mb-2"></i>
+                                    <h6>{{ plant.reservoir.name }}</h6>
+                                    <small class="text-muted">Capacidade: {{ plant.reservoir.capacity }} L</small>
+                                    <br>
+                                    <small class="text-muted">{{ plant.reservoir.sensors.count }} sensor(es)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas sobre dados de sensores -->
+                {% if total_readings > 0 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-chart-line"></i>
+                    <strong>Dados Históricos:</strong> Esta planta possui <strong>{{ total_readings }}</strong> leituras de sensores que também serão removidas.
+                    
+                    {% if sensors_with_data %}
+                    <details class="mt-2">
+                        <summary>Ver detalhes dos sensores com dados</summary>
+                        <ul class="mt-2 mb-0">
+                            {% for sensor in sensors_with_data %}
+                            <li>{{ sensor.name }}: {{ sensor.count }} leituras</li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <form method="post" id="deleteForm">
+                    {% csrf_token %}
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            Confirmo que desejo remover permanentemente esta planta e todos os dados associados
+                        </label>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                            <i class="fas fa-trash"></i> Sim, Remover Planta
+                        </button>
+                        <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Card de ajuda -->
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-lightbulb"></i> Alternativas</h6>
+            </div>
+            <div class="card-body">
+                <p class="small">Se você não quer remover permanentemente a planta, considere:</p>
+                <ul class="small">
+                    <li><strong>Desativar:</strong> Mantenha os dados mas marque como inativa</li>
+                    <li><strong>Exportar dados:</strong> Salve os dados dos sensores antes da remoção</li>
+                    <li><strong>Arquivar:</strong> Renomeie para indicar que não está mais em uso</li>
+                </ul>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'plant_edit' plant.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Editar Planta
+                    </a>
+                    {% if plant.is_active %}
+                    <form method="post" action="{% url 'plant_toggle_status' plant.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                            <i class="fas fa-pause"></i> Desativar Apenas
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-bar"></i> Estatísticas</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h5 class="text-primary">{{ plant.water_well.sensors.count|add:plant.dissalinator.sensors.count|add:plant.reservoir.sensors.count }}</h5>
+                        <small class="text-muted">Sensores</small>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="text-warning">{{ total_readings }}</h5>
+                        <small class="text-muted">Leituras</small>
+                    </div>
+                    <div class="col-4">
+                        <h5 class="text-info">{{ plant.created_at|timesince }}</h5>
+                        <small class="text-muted">Idade</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    
+    confirmCheckbox.addEventListener('change', function() {
+        deleteButton.disabled = !this.checked;
+    });
+    
+    // Confirmação adicional antes do envio
+    document.getElementById('deleteForm').addEventListener('submit', function(e) {
+        if (!confirm('ÚLTIMA CONFIRMAÇÃO: Tem certeza absoluta que deseja remover esta planta? Esta ação é IRREVERSÍVEL!')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

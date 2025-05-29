@@ -6,10 +6,12 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center">
-            <h2><i class="fas fa-industrie"></i> Plantas de Dessalinização</h2>
+            <h2><i class="fas fa-industry"></i> Plantas de Dessalinização</h2>
+            {% if can_manage %}
             <a href="{% url 'plant_create' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Nova Planta
             </a>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -30,59 +32,340 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Tipo</th>
-                                <th>Região</th>
-                                <th>Cidade</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for plant in plants %}
-                            <tr>
-                                <td>{{ plant.name }}</td>
-                                <td>
-                                    {% if plant.plant_type == 'small' %}Pequena
-                                    {% elif plant.plant_type == 'medium' %}Média
-                                    {% else %}Grande
-                                    {% endif %}
-                                </td>
-                                <td>{{ plant.region.name }}</td>
-                                <td>{{ plant.address.city }}/{{ plant.address.state }}</td>
-                                <td>
-                                    {% if plant.is_active %}
-                                        <span class="badge bg-success">Ativa</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inativa</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> Ver
-                                    </a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="6" class="text-center">Nenhuma planta encontrada</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Plantas Ativas</h6>
+                        <h3>{{ active_plants }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Plantas Inativas</h6>
+                        <h3>{{ inactive_plants }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-pause-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Regiões</h6>
+                        <h3>{{ total_regions }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-map-marked-alt fa-2x"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Filtros -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Buscar por nome</label>
+                        <input type="text" name="search" class="form-control" placeholder="Nome da planta..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Tipo</label>
+                        <select name="type" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="small" {% if request.GET.type == 'small' %}selected{% endif %}>Pequena</option>
+                            <option value="medium" {% if request.GET.type == 'medium' %}selected{% endif %}>Média</option>
+                            <option value="large" {% if request.GET.type == 'large' %}selected{% endif %}>Grande</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Região</label>
+                        <select name="region" class="form-control">
+                            <option value="">Todas</option>
+                            {% for region in regions_for_filter %}
+                                <option value="{{ region.id }}" {% if request.GET.region == region.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ region.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Ativas</option>
+                            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inativas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                            <a href="{% url 'plant_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Limpar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-list"></i> Lista de Plantas</h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm active" id="tableView">
+                            <i class="fas fa-table"></i> Tabela
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="cardView">
+                            <i class="fas fa-th-large"></i> Cards
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Visualização em Tabela -->
+                <div id="table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Tipo</th>
+                                    <th>Região</th>
+                                    <th>Localização</th>
+                                    <th>Status</th>
+                                    <th>Criada em</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plant in plants %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ plant.name }}</strong>
+                                        {% if not plant.is_active %}
+                                        <span class="badge bg-secondary ms-1">Inativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if plant.plant_type == 'small' %}
+                                            <span class="badge bg-info">Pequena</span>
+                                        {% elif plant.plant_type == 'medium' %}
+                                            <span class="badge bg-warning">Média</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Grande</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ plant.region.name }}</td>
+                                    <td>
+                                        <i class="fas fa-map-marker-alt text-muted"></i>
+                                        {{ plant.address.city }}/{{ plant.address.state }}
+                                    </td>
+                                    <td>
+                                        {% if plant.is_active %}
+                                            <span class="badge bg-success">Ativa</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ plant.created_at|date:"d/m/Y" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if can_manage %}
+                                            <a href="{% url 'plant_edit' plant.pk %}" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'plant_delete' plant.pk %}" class="btn btn-sm btn-outline-danger" title="Remover">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">Nenhuma planta encontrada</h5>
+                                        {% if can_manage %}
+                                        <a href="{% url 'plant_create' %}" class="btn btn-primary mt-2">
+                                            <i class="fas fa-plus"></i> Criar primeira planta
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Visualização em Cards -->
+                <div id="card-view" style="display: none;">
+                    <div class="row">
+                        {% for plant in plants %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 {% if not plant.is_active %}border-secondary{% endif %}">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ plant.name }}</h6>
+                                    {% if plant.plant_type == 'small' %}
+                                        <span class="badge bg-info">Pequena</span>
+                                    {% elif plant.plant_type == 'medium' %}
+                                        <span class="badge bg-warning">Média</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Grande</span>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <div class="row text-center mb-3">
+                                        <div class="col-4">
+                                            <i class="fas fa-water text-primary"></i>
+                                            <small class="d-block text-muted">Poço</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-filter text-warning"></i>
+                                            <small class="d-block text-muted">Dessalinizador</small>
+                                        </div>
+                                        <div class="col-4">
+                                            <i class="fas fa-database text-success"></i>
+                                            <small class="d-block text-muted">Reservatório</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="card-text">
+                                        <i class="fas fa-map-marker-alt text-muted"></i>
+                                        {{ plant.region.name }} - {{ plant.address.city }}/{{ plant.address.state }}
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ plant.created_at|date:"d/m/Y" }}</small>
+                                        {% if plant.is_active %}
+                                            <span class="badge bg-success">Ativa</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativa</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-sm btn-outline-primary flex-fill">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                        {% if can_manage %}
+                                        <a href="{% url 'plant_edit' plant.pk %}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'plant_delete' plant.pk %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhuma planta encontrada</h5>
+                            {% if can_manage %}
+                            <a href="{% url 'plant_create' %}" class="btn btn-primary mt-2">
+                                <i class="fas fa-plus"></i> Criar primeira planta
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle entre visualização de tabela e cards
+    const tableViewBtn = document.getElementById('tableView');
+    const cardViewBtn = document.getElementById('cardView');
+    const tableView = document.getElementById('table-view');
+    const cardView = document.getElementById('card-view');
+    
+    if (tableViewBtn && cardViewBtn) {
+        tableViewBtn.addEventListener('click', function() {
+            tableView.style.display = 'block';
+            cardView.style.display = 'none';
+            tableViewBtn.classList.add('active');
+            cardViewBtn.classList.remove('active');
+            localStorage.setItem('plantViewMode', 'table');
+        });
+        
+        cardViewBtn.addEventListener('click', function() {
+            tableView.style.display = 'none';
+            cardView.style.display = 'block';
+            cardViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+            localStorage.setItem('plantViewMode', 'card');
+        });
+        
+        // Lembrar preferência do usuário
+        const savedViewMode = localStorage.getItem('plantViewMode');
+        if (savedViewMode === 'card') {
+            cardViewBtn.click();
+        }
+    }
+});
+</script>
+
+<style>
+.table tbody tr:hover {
+    background-color: rgba(0,0,0,0.02);
+}
+
+.btn-group .btn {
+    border-radius: 0.25rem;
+    margin-right: 0.25rem;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease-in-out;
+}
+</style>
 {% endblock %}

@@ -1,4 +1,3 @@
-<!-- templates/monitoring/plant_form_simple.html -->
 {% extends 'base.html' %}
 
 {% block title %}{{ title }} - WaterStation{% endblock %}
@@ -6,76 +5,576 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <h2><i class="fas fa-plus"></i> {{ title }}</h2>
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>
+                <i class="fas fa-{% if is_edit %}edit{% else %}plus{% endif %}"></i> 
+                {{ title }}
+            </h2>
+            <a href="{% if is_edit %}{% url 'plant_detail' plant.pk %}{% else %}{% url 'plant_list' %}{% endif %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
     </div>
 </div>
 
 <div class="row mt-4">
-    <div class="col-md-8">
+    <div class="col-12">
+        {% if not is_edit %}
+        <!-- Abas para escolher tipo de formulário -->
+        <ul class="nav nav-tabs" id="formTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="simple-tab" data-bs-toggle="tab" data-bs-target="#simple-form" type="button" role="tab">
+                    <i class="fas fa-bolt"></i> Criação Rápida
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="complete-tab" data-bs-toggle="tab" data-bs-target="#complete-form" type="button" role="tab">
+                    <i class="fas fa-cogs"></i> Formulário Completo
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content mt-3" id="formTabsContent">
+            <!-- Formulário Simples -->
+            <div class="tab-pane fade show active" id="simple-form" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-bolt"></i> Criação Rápida de Planta</h5>
+                        <small class="text-muted">Criará uma planta com componentes padrão</small>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="simple_form" value="1">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome da Planta</label>
+                                        {{ simple_form.plant_name }}
+                                    </div>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Componentes Padrão:</strong> Será criado automaticamente um poço (150m), dessalinizador (500 L/h) e reservatório (10.000 L)
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Criar Planta
+                                </button>
+                                <a href="{% url 'plant_list' %}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário Completo -->
+            <div class="tab-pane fade" id="complete-form" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs"></i> Formulário Completo</h5>
+                        <small class="text-muted">Configure todos os detalhes da planta e seus componentes</small>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Informações da Planta -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-industry"></i> Informações da Planta</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome da Planta</label>
+                                                {{ complete_form.plant_form.name }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">Tipo</label>
+                                                {{ complete_form.plant_form.plant_type }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="mb-3">
+                                                <label class="form-label">Região</label>
+                                                {{ complete_form.plant_form.region }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-check">
+                                        {{ complete_form.plant_form.is_active }}
+                                        <label class="form-check-label">Planta Ativa</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Endereço -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-map-marker-alt"></i> Endereço</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label class="form-label">Rua</label>
+                                                {{ complete_form.address_form.street }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Número</label>
+                                                {{ complete_form.address_form.number }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Bairro</label>
+                                                {{ complete_form.address_form.neighborhood }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Cidade</label>
+                                                {{ complete_form.address_form.city }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="mb-3">
+                                                <label class="form-label">Estado</label>
+                                                {{ complete_form.address_form.state }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="mb-3">
+                                                <label class="form-label">CEP</label>
+                                                {{ complete_form.address_form.cep }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Latitude</label>
+                                                {{ complete_form.address_form.latitude }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Longitude</label>
+                                                {{ complete_form.address_form.longitude }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Poço de Água -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-water"></i> Poço de Água</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome do Poço</label>
+                                                {{ complete_form.water_well_form.name }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Profundidade (m)</label>
+                                                {{ complete_form.water_well_form.depth }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check mt-4">
+                                                {{ complete_form.water_well_form.is_active }}
+                                                <label class="form-check-label">Ativo</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dessalinizador -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-filter"></i> Dessalinizador</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome do Dessalinizador</label>
+                                                {{ complete_form.dissalinator_form.name }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Capacidade (L/h)</label>
+                                                {{ complete_form.dissalinator_form.capacity }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check mt-4">
+                                                {{ complete_form.dissalinator_form.is_active }}
+                                                <label class="form-check-label">Ativo</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reservatório -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6><i class="fas fa-database"></i> Reservatório</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nome do Reservatório</label>
+                                                {{ complete_form.reservoir_form.name }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label class="form-label">Capacidade (L)</label>
+                                                {{ complete_form.reservoir_form.capacity }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-check mt-4">
+                                                {{ complete_form.reservoir_form.is_active }}
+                                                <label class="form-check-label">Ativo</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Salvar Planta Completa
+                                </button>
+                                <a href="{% url 'plant_list' %}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Formulário de Edição -->
         <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Editando Planta: {{ plant.name }}</h5>
+            </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
                     
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
-                        Este é um formulário simplificado. O formulário completo requer a criação do arquivo forms.py
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Nome da Planta</label>
-                        <input type="text" name="plant_name" class="form-control" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Tipo</label>
-                        <select name="plant_type" class="form-control" required>
-                            <option value="">Selecione...</option>
-                            <option value="small">Pequena</option>
-                            <option value="medium">Média</option>
-                            <option value="large">Grande</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Região</label>
-                        <select name="region" class="form-control" required>
-                            <option value="">Selecione...</option>
-                            {% for region in regions %}
-                                <option value="{{ region.id }}">{{ region.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Endereço - Rua</label>
-                        <input type="text" name="street" class="form-control" required>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Cidade</label>
-                                <input type="text" name="city" class="form-control" required>
-                            </div>
+                    <!-- Informações da Planta -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-industry"></i> Informações da Planta</h6>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Estado</label>
-                                <input type="text" name="state" class="form-control" required>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome da Planta</label>
+                                        {{ complete_form.plant_form.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo</label>
+                                        {{ complete_form.plant_form.plant_type }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Região</label>
+                                        {{ complete_form.plant_form.region }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                {{ complete_form.plant_form.is_active }}
+                                <label class="form-check-label">Planta Ativa</label>
                             </div>
                         </div>
                     </div>
-                    
+
+                    <!-- Endereço -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-map-marker-alt"></i> Endereço</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rua</label>
+                                        {{ complete_form.address_form.street }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Número</label>
+                                        {{ complete_form.address_form.number }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Bairro</label>
+                                        {{ complete_form.address_form.neighborhood }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cidade</label>
+                                        {{ complete_form.address_form.city }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">Estado</label>
+                                        {{ complete_form.address_form.state }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="mb-3">
+                                        <label class="form-label">CEP</label>
+                                        {{ complete_form.address_form.cep }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Latitude</label>
+                                        {{ complete_form.address_form.latitude }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Longitude</label>
+                                        {{ complete_form.address_form.longitude }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Poço de Água -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-water"></i> Poço de Água</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome do Poço</label>
+                                        {{ complete_form.water_well_form.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Profundidade (m)</label>
+                                        {{ complete_form.water_well_form.depth }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check mt-4">
+                                        {{ complete_form.water_well_form.is_active }}
+                                        <label class="form-check-label">Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dessalinizador -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-filter"></i> Dessalinizador</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome do Dessalinizador</label>
+                                        {{ complete_form.dissalinator_form.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Capacidade (L/h)</label>
+                                        {{ complete_form.dissalinator_form.capacity }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check mt-4">
+                                        {{ complete_form.dissalinator_form.is_active }}
+                                        <label class="form-check-label">Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservatório -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6><i class="fas fa-database"></i> Reservatório</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nome do Reservatório</label>
+                                        {{ complete_form.reservoir_form.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">Capacidade (L)</label>
+                                        {{ complete_form.reservoir_form.capacity }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check mt-4">
+                                        {{ complete_form.reservoir_form.is_active }}
+                                        <label class="form-check-label">Ativo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Criar Planta</button>
-                        <a href="{% url 'plant_list' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                        <a href="{% url 'plant_detail' plant.pk %}" class="btn btn-secondary">Cancelar</a>
+                        {% if plant.is_active %}
+                        <a href="{% url 'plant_toggle_status' plant.pk %}" class="btn btn-warning" 
+                           onclick="return confirm('Deseja desativar esta planta?')">
+                            <i class="fas fa-pause"></i> Desativar
+                        </a>
+                        {% else %}
+                        <a href="{% url 'plant_toggle_status' plant.pk %}" class="btn btn-success">
+                            <i class="fas fa-play"></i> Ativar
+                        </a>
+                        {% endif %}
                     </div>
                 </form>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
-{% endblock %}
+
+<script>
+// Validação de formulário
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-preencher nomes dos componentes baseado no nome da planta
+    function updateComponentNames() {
+        const plantNameField = document.querySelector('input[name="plant-name"], input[name="plant_name"]');
+        if (plantNameField) {
+            plantNameField.addEventListener('input', function() {
+                const plantName = this.value;
+                
+                // Atualizar nomes dos componentes se estiverem vazios
+                const wellName = document.querySelector('input[name="water_well-name"]');
+                const dissName = document.querySelector('input[name="dissalinator-name"]');
+                const resName = document.querySelector('input[name="reservoir-name"]');
+                
+                if (wellName && !wellName.value) {
+                    wellName.value = `Poço ${plantName}`;
+                }
+                if (dissName && !dissName.value) {
+                    dissName.value = `Dessalinizador ${plantName}`;
+                }
+                if (resName && !resName.value) {
+                    resName.value = `Reservatório ${plantName}`;
+                }
+            });
+        }
+    }
+    
+    updateComponentNames();
+    
+    // Validação de coordenadas
+    const latField = document.querySelector('input[name="address-latitude"]');
+    const lngField = document.querySelector('input[name="address-longitude"]');
+    
+    if (latField && lngField) {
+        function validateCoordinate(field, min, max, name) {
+            field.addEventListener('blur', function() {
+                const value = parseFloat(this.value);
+                if (this.value && (isNaN(value) || value < min || value > max)) {
+                    alert(`${name} deve estar entre ${min} e ${max}`);
+                    this.focus();
+                }
+            });
+        }
+        
+        validateCoordinate(latField, -90, 90, 'Latitude');
+        validateCoordinate(lngField, -180, 180, 'Longitude');
+    }
+});
+</script>
+{% endblock %}                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo</label>
+                                        {{ simple_form.plant_type }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Região</label>
+                                {{ simple_form.region }}
+                            </div>
+                            
+                            <hr>
+                            <h6><i class="fas fa-map-marker-alt"></i> Localização</h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Rua</label>
+                                        {{ simple_form.street }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Cidade</label>
+                                        {{ simple_form.city }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="form-label">Estado</label>
+                                        {{ simple_form.state }}
+                                    </div>
+                                </div>
+                            </div>

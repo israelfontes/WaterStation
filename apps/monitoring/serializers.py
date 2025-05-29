@@ -1,4 +1,3 @@
-# apps/monitoring/serializers.py
 from rest_framework import serializers
 from apps.users.serializers import AddressSerializer
 from .models import Region, Plant, Sensor, WaterWell, Dissalinator, Reservoir, SensorReading

@@ -1,10 +1,3 @@
-# apps/monitoring/management/__init__.py
-# (arquivo vazio)
-
-# apps/monitoring/management/commands/__init__.py
-# (arquivo vazio)
-
-# apps/monitoring/management/commands/populate_test_data.py
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from decimal import Decimal
